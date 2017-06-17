@@ -202,7 +202,7 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
         printf("\nVariaveis");
         printf("\n-----------------------------\n");
         printf("Variavel Inicial: \n");
-        for(i=0; i<MaxVariaveis; i++)
+        for(i=0; i<Tamanho2; i++)
         {
             printf("%c", Variaveis[inicial][i]);
         }
