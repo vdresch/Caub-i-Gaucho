@@ -20,7 +20,7 @@ int NVariaveis = 0;
 int NTerminais = 0;
 
 // Lê o do arquivo de texto e guarda os terminais e variáveis em suas respectivas matrizes. Também guarda a variável inicial
-void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int inicial)
+void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int *inicial)
 {
     FILE* f;
     
@@ -153,12 +153,9 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
     
         for(i=0; i<MaxVariaveis; i++)
         {
-            strcpy(var2, variaveis[i]);
-            if(!strcmp(var, var2))
+            if(!strcmp(var, variaveis[i]))
             {
-                inicial = strcmp(var, var2);
-                printf("%d", inicial);
-                inicial = i;
+                *inicial = i;
             }
         }
         
@@ -205,7 +202,10 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
         printf("\nVariaveis");
         printf("\n-----------------------------\n");
         printf("Variavel Inicial: \n");
-        printf("%i", inicial);
+        for(i=0; i<MaxVariaveis; i++)
+        {
+            printf("%c", Variaveis[inicial][i]);
+        }
         printf("\n\nRestante:\n");
         for(i = 0; i< MaxVariaveis; i++)
         {
@@ -254,7 +254,7 @@ int main(int argc, const char * argv[])
     
     inicializa_matrizes(Terminais, Variaveis);
     
-    le_gramatica(Terminais, Variaveis, Inicial);
+    le_gramatica(Terminais, Variaveis, &Inicial);
     
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
