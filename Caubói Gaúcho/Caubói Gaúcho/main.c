@@ -1,4 +1,4 @@
-﻿//
+//
 //  main.c
 //  Caubói Gaúcho
 //
@@ -6,6 +6,7 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 
 #define Tamanho 30
 #define MaxTerminais 60
@@ -19,15 +20,15 @@ int NVariaveis = 0;
 int NTerminais = 0;
 
 // Lê o do arquivo de texto e guarda os terminais e variáveis em suas respectivas matrizes. Também guarda a variável inicial
-void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], char inicial[Tamanho2])
+void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int inicial)
 {
     FILE* f;
-
+    
     int i = 0;
     int j = 0;
-    int var;
+    char var[Tamanho2], var2[Tamanho2];
     char c;
-
+    
     f = fopen(arquivo, "r");
     if (f == NULL)
     {
@@ -37,33 +38,33 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
     else
     {
         printf("\nArquivo carregado com sucesso\n\n");
-
+        
         if((c = fgetc(f)) != '<')  // Verifica primeira linha
         {
             printf("\nErro de sintaxe! Linha 1\n");
             exit(0);
         }
-
+        
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
         }
-
+        
         // Percorre todos os terminais
         while((c = fgetc(f)) == '[')
         {
-            if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ terminal ]
+            if((c=fgetc(f))!= ' ') // Pula primeiro espaço  -> [ terminal ]
             {
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
             }
-
+            
             // Pega a palavra até o próximo ']' (terminal)
             while((c = fgetc(f)) != ']' && c != 127)
             {
                 terminais[i][j] = c;
                 j++;
-//                printf("%c", c);
+                //                printf("%c", c);
             }
             terminais[i][j-1] = '\0';   // Elimina o espaço que foi colocado ao fim do terminal
             NTerminais++;
@@ -76,20 +77,20 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
         }
         j = 0;
         i = 0;
-
+        
         if(c != 'V')  // Verifica linha Variaveis
         {
             printf("\n%c\nErro de sintaxe! \"Variaveis\" faltando\n",c);
             exit(0);
         }
-
+        
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
         }
-
-//        printf("\n");
-
+        
+        //        printf("\n");
+        
         // Percorre todas as variáveis
         while((c = fgetc(f)) == '[')
         {
@@ -98,13 +99,13 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
             }
-
+            
             // Pega a palavra até o próximo ']' (variável)
             while((c = fgetc(f)) != ']' && c != 127)
             {
                 variaveis[i][j] = c;
                 j++;
-//                printf("%c", c);
+                //                printf("%c", c);
             }
             variaveis[i][j-1] = '\0';   // Elimina o espaço que foi colocado ao fim da variável
             NVariaveis++;
@@ -115,18 +116,18 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 ;
             }
         }
-
+        
         if(c != 'I')  // Verifica linha Variaveis
         {
             printf("\n%c\nErro de sintaxe! \"Inicial\" faltando\n",c);
             exit(0);
         }
-
+        
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
-                ;
+            ;
         }
-
+        
         // Variável inicial
         if((c = fgetc(f)) != '[')  // Verifica '[' na linha da variável inicial
         {
@@ -141,13 +142,28 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
         i = 0;
         while((c = fgetc(f)) != ']' && c != 127)
         {
-            inicial[i] = c;
+            var[i] = c;
             i++;
-//            printf("%c", c);
+            //            printf("%c", c);
         }
-        inicial[i-1] = '\0';   // Elimina o espaço que foi colocado ao fim da variável inicial
-
-
+        if(var[i-1] == ' ')
+            var[i-1] = '\0';
+        
+        //testa se var é igual a uma variavel. se sim, atribui a posição ao simbolo inicial
+    
+        for(i=0; i<MaxVariaveis; i++)
+        {
+            strcpy(var2, variaveis[i]);
+            if(!strcmp(var, var2))
+            {
+                inicial = strcmp(var, var2);
+                printf("%d", inicial);
+                inicial = i;
+            }
+        }
+        
+        
+        
         return;
     }
 }
@@ -179,7 +195,7 @@ void imprime_terminais(char Terminais[MaxTerminais][Tamanho])
 }
 
 //Imprime todas as variáveis na matriz de variáveis
-void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], char inicial[Tamanho2])
+void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
 {
     int i=0;
     int j=0;
@@ -189,11 +205,7 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], char inicial[Tama
         printf("\nVariaveis");
         printf("\n-----------------------------\n");
         printf("Variavel Inicial: \n");
-        for(i = 0; i<Tamanho; i++)
-        {
-            if(inicial[i] != '\0')
-                printf("%c", inicial[i]);
-        }
+        printf("%i", inicial);
         printf("\n\nRestante:\n");
         for(i = 0; i< MaxVariaveis; i++)
         {
@@ -212,10 +224,10 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], char inicial[Tama
 }
 
 // Inicializa as matrizes de terminais e de variáveis com o caractere '\0'
-void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], char inicial[Tamanho2])
+void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2])
 {
     int i, j = 0;
-
+    
     for(i = 0; i< MaxTerminais; i++)
     {
         for(j = 0; j<Tamanho; j++)
@@ -230,11 +242,7 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
             variaveis[i][j] = '\0';
         }
     }
-    for(i = 0; i<Tamanho2; i++)
-    {
-        inicial[i] = '\0';
-    }
-
+    
     printf("\nMatrizes inicializadas\n");
 }
 
@@ -242,16 +250,16 @@ int main(int argc, const char * argv[])
 {
     char Terminais[MaxTerminais][Tamanho];
     char Variaveis[MaxVariaveis][Tamanho2];
-    char Inicial[Tamanho2];
-
-    inicializa_matrizes(Terminais, Variaveis, Inicial);
-
+    int Inicial = 0;
+    
+    inicializa_matrizes(Terminais, Variaveis);
+    
     le_gramatica(Terminais, Variaveis, Inicial);
-
+    
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
-
+    
     printf("NVariaveis: %i\nNTerminais: %i\n", NVariaveis, NTerminais);
-
+    
     return 0;
 }
