@@ -14,22 +14,23 @@
 
 //Constantes
 
-#define Tamanho 30
-#define MaxTerminais 60
+#define Tamanho 200
+#define MaxTerminais 30
 
-#define Tamanho2 30
-#define MaxVariaveis 60
+#define Tamanho2 70
+#define MaxVariaveis 50
 
-#define NVarRegra 30
-#define NRegras 60
+#define NVarRegra 10
+#define MaxRegras 60
 
-#define arquivo "sample.txt"
+#define arquivo "gramatica2.txt"
 
 
 //variaveis
 
 int NVariaveis = 0;
 int NTerminais = 0;
+int NRegras = 0;
 
 
 //estruturas
@@ -48,16 +49,16 @@ struct REGRA
 
 
 // Lê o do arquivo de texto e guarda os terminais e variáveis em suas respectivas matrizes. Também guarda a variável inicial
-void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int *inicial, struct REGRA regras[NRegras])
+void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int *inicial, struct REGRA regras[MaxRegras])
 {
     FILE* f;
-    
+
     int i = 0;
     int j = 0;
     int k = 0;
     char var[Tamanho2], var2[Tamanho2];
     char c;
-    
+
     f = fopen(arquivo, "r");
     if (f == NULL)
     {
@@ -67,18 +68,18 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
     else
     {
         printf("\nArquivo carregado com sucesso\n\n");
-        
+
         if((c = fgetc(f)) != '<')  // Verifica primeira linha
         {
             printf("\nErro de sintaxe! Linha 1\n");
             exit(0);
         }
-        
+
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
         }
-        
+
         // Percorre todos os terminais
         while((c = fgetc(f)) == '[')
         {
@@ -87,7 +88,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
             }
-            
+
             // Pega a palavra até o próximo ']' (terminal)
             while((c = fgetc(f)) != ']' && c != 127)
             {
@@ -106,20 +107,20 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
         }
         j = 0;
         i = 0;
-        
+
         if(c != 'V')  // Verifica linha Variaveis
         {
             printf("\n%c\nErro de sintaxe! \"Variaveis\" faltando\n",c);
             exit(0);
         }
-        
+
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
         }
-        
+
         //        printf("\n");
-        
+
         // Percorre todas as variáveis
         while((c = fgetc(f)) == '[')
         {
@@ -128,7 +129,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
             }
-            
+
             // Pega a palavra até o próximo ']' (variável)
             while((c = fgetc(f)) != ']' && c != 127)
             {
@@ -145,18 +146,18 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 ;
             }
         }
-        
+
         if(c != 'I')  // Verifica linha Variaveis
         {
             printf("\n%c\nErro de sintaxe! \"Inicial\" faltando\n",c);
             exit(0);
         }
-        
+
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
         }
-        
+
         // Variável inicial
         if((c = fgetc(f)) != '[')  // Verifica '[' na linha da variável inicial
         {
@@ -176,22 +177,28 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             //            printf("%c", c);
         }
         if(var[i-1] == ' ')
-            var[i-1] = '\0';
-        
+            var[i-1] = '\0';  // Elimina o espaço que foi colocado ao fim da variável
+
         //testa se var é igual a uma variavel. se sim, atribui a posição ao simbolo inicial
-    
+        int inicialEvariavel = 0;
         for(i=0; i<MaxVariaveis; i++)
         {
             if(!strcmp(var, variaveis[i]))
             {
                 *inicial = i;
+                inicialEvariavel = 1;
             }
         }
-        
+        if(!inicialEvariavel)   // Se a variável inicial não estiver na matriz de variáveis, retorna erro
+        {
+            printf("\nErro! Variavel inicial nao foi declarada como variavel.\n",c);
+            exit(0);
+        }
+
         j=0;
-        
+
         //Regras(sob construção)
-        
+
         while((c = fgetc(f)) != 13) // Vai para a próxima linha
         {
             ;
@@ -201,37 +208,63 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             ;
         }
         i = 0;
-        
+
         strcpy(var2, "");
-        
+
         while((c = fgetc(f)) == '[')
         {
-            //carrega posicao da variavel
-            c = fgetc(f);
+            if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ variável ]
+            {
+                printf("\nErro de sintaxe! Espaco faltando\n");
+                exit(0);
+            }
+
+            // Pega a palavra até o próximo ']' (parte esquerda da regra)
             while((c = fgetc(f)) != ']' && c != 127)
             {
                 var2[i] = c;
                 i++;
             }
             if(var2[i-1] == ' ')
-                var2[i-1] = '\0';
+                var2[i-1] = '\0';   // Elimina o espaço que foi colocado ao fim do terminal
+
+            // Encontra a posição da variável da regra na matriz de variáveis
+            int varExiste = 0;
             for(i=0; i<MaxVariaveis; i++)
             {
                 //strcpy(var, variaveis[i]);
                 if(!strcmp(var2, variaveis[i]))
                 {
                     regras[j].variavel = i;
+                    varExiste = 1;
                 }
-                
             }
+            if(!varExiste)    // Se a variável da regra não existe, retorna erro
+            {
+                printf("\nErro! A variavel \"");
+                int k = 0;
+                for(;k<strlen(var2);k++)
+                {
+                    if(var2[k]!='\0')
+                        printf("%c",var2[k]);
+                }
+                printf("\" foi declarada nas regras mas nao nas variaveis.\n");
+                exit(0);
+            }
+
             //carrega variaveis
-            
             while((c = fgetc(f)) != ';')
             {
-                if(c == '[')
+                if(c == '[')    // Parte direita da regra encontrada
                 {
                     i=0;
-                    c = fgetc(f);
+                    if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ ? ]
+                    {
+                        printf("\nErro de sintaxe! Espaco faltando\n");
+                        exit(0);
+                    }
+
+                    // Pega a palavra até o próximo ']' (parte direita da regra)
                     while((c = fgetc(f)) != ']' && c != 127)
                     {
                         var2[i] = c;
@@ -239,6 +272,10 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                     }
                     if(var2[i-1] == ' ')
                         var2[i-1] = '\0';
+
+                    // Procura parte direita na lista de variáveis
+                    int varExiste = 0;
+                    int terExiste = 0;
                     for(i=0; i<MaxVariaveis; i++)
                     {
                        // strcpy(var, variaveis[i]);
@@ -247,9 +284,11 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                             regras[j].proxVar[k][0] = i;
                             regras[j].proxVar[k][1] = 1;
                             regras[j].nTermos++;
+                            varExiste = 1;
                         }
-                        
                     }
+
+                    // Procura parte direita na lista de terminais
                     for(i=0; i<MaxTerminais; i++)
                     {
                        // strcpy(var, terminais[i]);
@@ -258,9 +297,35 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                             regras[j].proxVar[k][0] = i;
                             regras[j].proxVar[k][1] = 2;
                             regras[j].nTermos++;
+                            terExiste = 1;
                         }
-                        
                     }
+
+                    if(terExiste && varExiste)  // Se encontrou a var2 na lista de terminais E na de variáveis
+                    {
+                        printf("\nErro! \"");
+                        int k = 0;
+                        for(;k<strlen(var2);k++)
+                        {
+                            if(var2[k]!='\0')
+                                printf("%c",var2[k]);
+                        }
+                        printf("\" declarado como variavel e terminal.\n");
+                        exit(0);
+                    }
+                    else if(!terExiste && !varExiste)   // Se não encontrou var2 na lista de variáveis OU na de terminais
+                    {
+                        printf("\nErro! \"");
+                        int k = 0;
+                        for(;k<strlen(var2);k++)
+                        {
+                            if(var2[k]!='\0')
+                                printf("%c",var2[k]);
+                        }
+                        printf("\" foi declarado somente nas regras.\n");
+                        exit(0);
+                    }
+
                     for(i=0;i<Tamanho2;i++)
                     {
                         var2[i] = 0;
@@ -269,11 +334,14 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                     k++;
                 }
             }
-            
+
             //pega peso
             c = fgetc(f);
             if(c == '\t')
                 c = fgetc(f);
+            //else if((c = fgetc(f)) == ' ')
+            //    while((c = fgetc(f)) == ' ')
+            //        ;
             regras[j].peso += (c - 48);
             c = fgetc(f);
             if(c == '.')
@@ -284,9 +352,11 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 if(c != ' ' && c != '\t' && c != '\r')
                     regras[j].peso += (c - 48)*0.01;
             }
-            
-            
-            
+
+            NRegras ++;
+
+
+
             while((c = fgetc(f)) != 13) // Vai para a próxima linha
             {
                 ;
@@ -295,8 +365,8 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             i = 0;
             k=0;
         }
-        
-        
+
+
         return;
     }
 }
@@ -359,11 +429,69 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
         printf("\nNao ha variaveis.\n");
 }
 
+//Imprime todas as regras na matriz de regras
+void imprime_regras(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras])
+{
+    int i=0;
+    int j=0;
+    if(regras[0].proxVar[0][0] != -1)
+    {
+        printf("\n-----------------------------");
+        printf("\nRegras");
+        printf("\n-----------------------------\n");
+        for(i = 0; i< NRegras; i++)
+        {
+            printf("[ ");
+            int k = 0;
+            // Imprime lado esquerdo da regra
+            for(;k<strlen(variaveis[regras[i].variavel]);k++)
+            {
+                if(variaveis[regras[i].variavel][k]!='\0')
+                    printf("%c",variaveis[regras[i].variavel][k]);
+            }
+            printf(" ] ->");
+
+            // Imprime lado direito da regra
+            for(j=0; j<regras[i].nTermos; j++)
+            {
+                int k = 0;
+                printf(" [ ");
+                //printf("\n\n\n_%c_\n\n\n", );
+                if(regras[i].proxVar[j][1]==1)
+                {
+                    for(;k<Tamanho2;k++)
+                    {
+                        if(variaveis[regras[i].proxVar[j][0]][k]!='\0')
+                            printf("%c",variaveis[regras[i].proxVar[j][0]][k]);
+                    }
+                }
+                else if(regras[i].proxVar[j][1]==2)
+                {
+                    for(;k<Tamanho;k++)
+                    {
+                        if(terminais[regras[i].proxVar[j][0]][k]!='\0')
+                            printf("%c",terminais[regras[i].proxVar[j][0]][k]);
+                    }
+                }
+                printf(" ]");
+            }
+
+            // Imprime peso da regra
+            printf(" ;%.2f", regras[i].peso);
+            printf("\n");
+
+        }
+        printf("-----------------------------\n\n");
+    }
+    else
+        printf("\nNao ha regras.\n");
+}
+
 // Inicializa as matrizes de terminais e de variáveis com o caractere '\0'
-void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[NRegras])
+void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras])
 {
     int i, j = 0;
-    
+
     for(i = 0; i< MaxTerminais; i++)
     {
         for(j = 0; j<Tamanho; j++)
@@ -378,7 +506,7 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
             variaveis[i][j] = '\0';
         }
     }
-    for(i = 0; i< NRegras; i++)
+    for(i = 0; i< MaxRegras; i++)
     {
         regras[i].variavel = 0;
         regras[i].nTermos = 0;
@@ -389,28 +517,28 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
             regras[i].proxVar[j][1] = -1;
         }
     }
-    
+
     printf("\nMatrizes inicializadas\n");
 }
 
 
 //main
-
 int main(int argc, const char * argv[])
 {
     char Terminais[MaxTerminais][Tamanho];
     char Variaveis[MaxVariaveis][Tamanho2];
-    struct REGRA Regras[NRegras];
+    struct REGRA Regras[MaxRegras];
     int Inicial = 0;
-    
+
     inicializa_matrizes(Terminais, Variaveis, Regras);
-    
+
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
-    
+
+    imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
-    
-    printf("NVariaveis: %i\nNTerminais: %i\n", NVariaveis, NTerminais);
-    
+
+    printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i", NVariaveis, NTerminais, NRegras);
+
     return 0;
 }
