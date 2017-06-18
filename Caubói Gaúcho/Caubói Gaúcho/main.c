@@ -5,8 +5,14 @@
 //  Copyright © 2017 Caubói Gaúcho. All rights reserved.
 //
 
+
+//bibliotecas
+
 #include <stdio.h>
 #include <string.h>
+
+
+//Constantes
 
 #define Tamanho 30
 #define MaxTerminais 60
@@ -14,18 +20,41 @@
 #define Tamanho2 30
 #define MaxVariaveis 60
 
+#define NVarRegra 30
+#define NRegras 60
+
 #define arquivo "sample.txt"
+
+
+//variaveis
 
 int NVariaveis = 0;
 int NTerminais = 0;
 
+
+//estruturas
+
+struct REGRA
+{
+    int variavel;           //posição no array variaveis da variavel da esquerda
+    int nTermos;           //numero de termos a direita
+    int proxVar[NVarRegra][2];  //termos a direita
+    float peso;
+};
+
+
+
+
+
+
 // Lê o do arquivo de texto e guarda os terminais e variáveis em suas respectivas matrizes. Também guarda a variável inicial
-void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int *inicial)
+void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], int *inicial, struct REGRA regras[NRegras])
 {
     FILE* f;
     
     int i = 0;
     int j = 0;
+    int k = 0;
     char var[Tamanho2], var2[Tamanho2];
     char c;
     
@@ -159,6 +188,113 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             }
         }
         
+        j=0;
+        
+        //Regras(sob construção)
+        
+        while((c = fgetc(f)) != 13) // Vai para a próxima linha
+        {
+            ;
+        }
+        while((c = fgetc(f)) != 13) // Vai para a próxima linha
+        {
+            ;
+        }
+        i = 0;
+        
+        strcpy(var2, "");
+        
+        while((c = fgetc(f)) == '[')
+        {
+            //carrega posicao da variavel
+            c = fgetc(f);
+            while((c = fgetc(f)) != ']' && c != 127)
+            {
+                var2[i] = c;
+                i++;
+            }
+            if(var2[i-1] == ' ')
+                var2[i-1] = '\0';
+            for(i=0; i<MaxVariaveis; i++)
+            {
+                //strcpy(var, variaveis[i]);
+                if(!strcmp(var2, variaveis[i]))
+                {
+                    regras[j].variavel = i;
+                }
+                
+            }
+            //carrega variaveis
+            
+            while((c = fgetc(f)) != ';')
+            {
+                if(c == '[')
+                {
+                    i=0;
+                    c = fgetc(f);
+                    while((c = fgetc(f)) != ']' && c != 127)
+                    {
+                        var2[i] = c;
+                        i++;
+                    }
+                    if(var2[i-1] == ' ')
+                        var2[i-1] = '\0';
+                    for(i=0; i<MaxVariaveis; i++)
+                    {
+                       // strcpy(var, variaveis[i]);
+                        if(strcmp(var2, variaveis[i]) == 0)
+                        {
+                            regras[j].proxVar[k][0] = i;
+                            regras[j].proxVar[k][1] = 1;
+                            regras[j].nTermos++;
+                        }
+                        
+                    }
+                    for(i=0; i<MaxTerminais; i++)
+                    {
+                       // strcpy(var, terminais[i]);
+                        if(strcmp(var2, terminais[i]) == 0)
+                        {
+                            regras[j].proxVar[k][0] = i;
+                            regras[j].proxVar[k][1] = 2;
+                            regras[j].nTermos++;
+                        }
+                        
+                    }
+                    for(i=0;i<Tamanho2;i++)
+                    {
+                        var2[i] = 0;
+                    }
+                    i=0;
+                    k++;
+                }
+            }
+            
+            //pega peso
+            c = fgetc(f);
+            if(c == '\t')
+                c = fgetc(f);
+            regras[j].peso += (c - 48);
+            c = fgetc(f);
+            if(c == '.')
+            {
+                c = fgetc(f);
+                regras[j].peso += (c - 48)*0.1;
+                c = fgetc(f);
+                if(c != ' ' && c != '\t' && c != '\r')
+                    regras[j].peso += (c - 48)*0.01;
+            }
+            
+            
+            
+            while((c = fgetc(f)) != 13) // Vai para a próxima linha
+            {
+                ;
+            }
+            j++;
+            i = 0;
+            k=0;
+        }
         
         
         return;
@@ -224,7 +360,7 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
 }
 
 // Inicializa as matrizes de terminais e de variáveis com o caractere '\0'
-void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2])
+void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[NRegras])
 {
     int i, j = 0;
     
@@ -242,19 +378,34 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
             variaveis[i][j] = '\0';
         }
     }
+    for(i = 0; i< NRegras; i++)
+    {
+        regras[i].variavel = 0;
+        regras[i].nTermos = 0;
+        regras[i].peso = 0;
+        for(j=0; j<NVarRegra; j++)
+        {
+            regras[i].proxVar[j][0] = -1;
+            regras[i].proxVar[j][1] = -1;
+        }
+    }
     
     printf("\nMatrizes inicializadas\n");
 }
+
+
+//main
 
 int main(int argc, const char * argv[])
 {
     char Terminais[MaxTerminais][Tamanho];
     char Variaveis[MaxVariaveis][Tamanho2];
+    struct REGRA Regras[NRegras];
     int Inicial = 0;
     
-    inicializa_matrizes(Terminais, Variaveis);
+    inicializa_matrizes(Terminais, Variaveis, Regras);
     
-    le_gramatica(Terminais, Variaveis, &Inicial);
+    le_gramatica(Terminais, Variaveis, &Inicial, Regras);
     
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
