@@ -38,7 +38,7 @@ struct REGRA
 {
     int variavel;           //posição no array variaveis da variavel da esquerda
     int nTermos;           //numero de termos a direita
-    int proxVar[NVarRegra][2];  //termos a direita
+    int proxVar[NVarRegra][2];  //termos a direita. primeiro [] diz qual termo do array olhar. segundo [] diz se é pra olhar no vetor de variaveis ou terminais
     float peso;
 };
 
