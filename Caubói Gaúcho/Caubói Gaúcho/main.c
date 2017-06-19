@@ -37,6 +37,7 @@ int NRegras = 0;
 
 struct REGRA
 {
+    int marcador;           // Posição do marcador utilizado pelo parser
     int variavel;           //posição no array variaveis da variavel da esquerda
     int nTermos;           //numero de termos a direita
     int proxVar[NVarRegra][2];  //termos a direita. primeiro [] diz qual termo do array olhar. segundo [] diz se é pra olhar no vetor de variaveis ou terminais
@@ -124,7 +125,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
         // Percorre todas as variáveis
         while((c = fgetc(f)) == '[')
         {
-            if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ terminal ]
+            if((c=fgetc(f))!= ' ') // Pula primeiro espaço  -> [ terminal ]
             {
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
@@ -213,7 +214,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
 
         while((c = fgetc(f)) == '[')
         {
-            if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ variável ]
+            if((c=fgetc(f))!= ' ') // Pula primeiro espaço  -> [ variável ]
             {
                 printf("\nErro de sintaxe! Espaco faltando\n");
                 exit(0);
@@ -258,7 +259,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
                 if(c == '[')    // Parte direita da regra encontrada
                 {
                     i=0;
-                    if(c=fgetc(f)!= ' ') // Pula primeiro espaço  -> [ ? ]
+                    if((c=fgetc(f))!= ' ') // Pula primeiro espaço  -> [ ? ]
                     {
                         printf("\nErro de sintaxe! Espaco faltando\n");
                         exit(0);
@@ -508,6 +509,7 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
     }
     for(i = 0; i< MaxRegras; i++)
     {
+        regras[i].marcador = 0;
         regras[i].variavel = 0;
         regras[i].nTermos = 0;
         regras[i].peso = 0;
@@ -521,6 +523,50 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
     printf("\nMatrizes inicializadas\n");
 }
 
+
+// Dada uma regra e um vetor de regras, procura a variável indicada pelo marcador da regra no lado esquerdo do vetor de regras
+// Retorna um vetor com todas as regras encontradas
+struct REGRA * procura_esquerda(struct REGRA regra_in, struct REGRA regras[MaxRegras])
+{
+    int i,j;
+    int k = 0;  // Contador das posições de regras_out
+    struct REGRA regras_out[MaxRegras];
+
+    //----------------------------------------
+    // Inicializa a regra de saída. Caso não seja encontrada a regra de entrada no vetor, é assim que ela será devolvida
+    regras_out[k].marcador  = -1;
+    regras_out[k].variavel  = -1;
+    regras_out[k].nTermos   = -1;
+    regras_out[k].peso      = -1;
+    for(j=0; j<NVarRegra; j++)
+    {
+        regras_out[k].proxVar[j][0] = -1;
+        regras_out[k].proxVar[j][1] = -1;
+    }
+    // Fim da inicialização
+    //----------------------------------------
+
+    // Percorre o vetor de regras
+    for(i=0; i < NRegras; i++)
+    {
+        if(regra_in.proxVar[regra_in.marcador][0] == regras[i].variavel)    // Se a variável de entrada for igual à variável na posição atual do array
+        {
+            k++;    // Indica que foi colocado um elemento em regras_out
+            // Copia todos os dados da variável atual para a regra de saída
+            regras_out[k].marcador  = regras[i].marcador;
+            regras_out[k].variavel  = regras[i].variavel;
+            regras_out[k].nTermos   = regras[i].nTermos;
+            regras_out[k].peso      = regras[i].peso;
+            for(j=0; j<NVarRegra; j++)
+            {
+                regras_out[k].proxVar[j][0] = regras[i].proxVar[j][0];
+                regras_out[k].proxVar[j][1] = regras[i].proxVar[j][1];
+            }
+        }
+    }
+
+    return regras_out;
+}
 
 //main
 int main(int argc, const char * argv[])
