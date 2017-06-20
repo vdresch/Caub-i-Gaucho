@@ -23,7 +23,7 @@
 #define NVarRegra 10
 #define MaxRegras 60
 
-#define arquivo "gramatica2.txt"
+#define arquivo "sample.txt"
 
 
 //variaveis
@@ -549,7 +549,7 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
 // Função que gera D0
 int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[MaxRegras], int k)
 {
-    printf("\n\nIniciando D0 com var=%i e k=%i", var, k);
+    //printf("\n\nIniciando D0 com var=%i e k=%i", var, k);
     int k_buff = k;
     int i,j;
     //----------------------------------------
@@ -561,7 +561,7 @@ int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[Max
             break;
         if(regras[i].variavel == var)    // Se for regra da variável atual
         {
-            printf("\n\nRegra encontrada!");
+            //printf("\n\nRegra encontrada!");
             // Verifica se a regra já está no vetor
             int estaNoVetor = 0;
             for(j=0; j<MaxRegras; j++)  // Percorre o vetor de regras
@@ -569,8 +569,8 @@ int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[Max
                 if(regras[i].ID==regras_out[j].ID)    // Se a regra já está no vetor de saída
                 {
                     estaNoVetor = 1;
-                    printf("\nRegra ja esta no vetor!");
-                    printf("\nregras[i].id:%i\nregras_out[j].id: %i", regras[i].ID, regras_out[j].ID);
+                    //printf("\nRegra ja esta no vetor!");
+                    //printf("\nregras[i].id:%i\nregras_out[j].id: %i", regras[i].ID, regras_out[j].ID);
                 }
             }
             if(!estaNoVetor)   // Se a regra não está no vetor, a adciona
@@ -586,7 +586,7 @@ int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[Max
     {
         if(regras_out[i].marcador!=-1 && regras_out[i].proxVar[regras_out[i].marcador][1]==1 && k!=k_buff)   // Se a regra existe e o valor indicado pelo marcador é uma regra e foi adicionado algo ao vetor de saída
         {
-            printf("\nMarcador: %i\nproxVar: %i, %i",regras_out[i].marcador, regras_out[i].proxVar[regras_out[i].marcador][0], regras_out[i].proxVar[regras_out[i].marcador][1]);
+            //printf("\nMarcador: %i\nproxVar: %i, %i",regras_out[i].marcador, regras_out[i].proxVar[regras_out[i].marcador][0], regras_out[i].proxVar[regras_out[i].marcador][1]);
             gera_D0(regras_out[i].proxVar[regras_out[i].marcador][0], regras, regras_out, k); // Para cada regra que existe, busca a variável apontada pelo marcador
         }
         else
@@ -605,6 +605,13 @@ int main(int argc, const char * argv[])
     struct REGRA D0[MaxRegras];
     int Inicial = 0;
 
+    printf("\nInicial: ");
+    int i = 0;
+    for(; i<strlen(Variaveis[Regras[Inicial].variavel]); i++)
+    {
+        if(Variaveis[Regras[Inicial].variavel][i]!='\0')
+            printf("%c",Variaveis[Regras[Inicial].variavel][i]);
+    }
     // Inicialização
     inicializa_matrizes(Terminais, Variaveis, Regras, D0);
 
@@ -612,8 +619,7 @@ int main(int argc, const char * argv[])
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
 
     // Geração de D0
-    D0[0]=Regras[Inicial];
-    gera_D0(Inicial, Regras, D0, 1);
+    gera_D0(Inicial, Regras, D0, 0);
 
     imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
