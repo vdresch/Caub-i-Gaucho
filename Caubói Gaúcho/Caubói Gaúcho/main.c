@@ -23,7 +23,7 @@
 #define NVarRegra 10
 #define MaxRegras 60
 
-#define arquivo "gramatica2.txt"
+#define arquivo "sample.txt"
 
 
 //variaveis
@@ -442,44 +442,50 @@ void imprime_regras(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVar
         printf("\n-----------------------------\n");
         for(i = 0; i< NRegras; i++)
         {
-            printf("[ ");
-            int k = 0;
-            // Imprime lado esquerdo da regra
-            for(;k<strlen(variaveis[regras[i].variavel]);k++)
+            if(regras[i].proxVar[0][1] != -1)
             {
-                if(variaveis[regras[i].variavel][k]!='\0')
-                    printf("%c",variaveis[regras[i].variavel][k]);
-            }
-            printf(" ] ->");
-
-            // Imprime lado direito da regra
-            for(j=0; j<regras[i].nTermos; j++)
-            {
+                printf("[ ");
                 int k = 0;
-                printf(" [ ");
-                //printf("\n\n\n_%c_\n\n\n", );
-                if(regras[i].proxVar[j][1]==1)
+                // Imprime lado esquerdo da regra
+                for(;k<strlen(variaveis[regras[i].variavel]);k++)
                 {
-                    for(;k<Tamanho2;k++)
-                    {
-                        if(variaveis[regras[i].proxVar[j][0]][k]!='\0')
-                            printf("%c",variaveis[regras[i].proxVar[j][0]][k]);
-                    }
+                    if(variaveis[regras[i].variavel][k]!='\0')
+                        printf("%c",variaveis[regras[i].variavel][k]);
                 }
-                else if(regras[i].proxVar[j][1]==2)
-                {
-                    for(;k<Tamanho;k++)
-                    {
-                        if(terminais[regras[i].proxVar[j][0]][k]!='\0')
-                            printf("%c",terminais[regras[i].proxVar[j][0]][k]);
-                    }
-                }
-                printf(" ]");
-            }
+                printf(" ] ->");
 
-            // Imprime peso da regra
-            printf(" ;%.2f", regras[i].peso);
-            printf("\n");
+                // Imprime lado direito da regra
+                for(j=0; j<regras[i].nTermos; j++)
+                {
+                    int k = 0;
+                    printf(" [ ");
+                    //printf("\n\n\n_%c_\n\n\n", );
+                    if(regras[i].proxVar[j][1]==1)
+                    {
+                        for(;k<Tamanho2;k++)
+                        {
+                            if(variaveis[regras[i].proxVar[j][0]][k]!='\0')
+                                printf("%c",variaveis[regras[i].proxVar[j][0]][k]);
+                        }
+                    }
+                    else if(regras[i].proxVar[j][1]==2)
+                    {
+                        for(;k<Tamanho;k++)
+                        {
+                            if(terminais[regras[i].proxVar[j][0]][k]!='\0')
+                                printf("%c",terminais[regras[i].proxVar[j][0]][k]);
+                        }
+                    }
+                    printf(" ]");
+                }
+
+                // Imprime peso da regra
+                printf(" ;%.2f", regras[i].peso);
+
+                // Imprime marcador
+                printf("  Marcador: %i", regras[i].marcador);
+                printf("\n");
+            }
 
         }
         printf("-----------------------------\n\n");
@@ -489,7 +495,7 @@ void imprime_regras(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVar
 }
 
 // Inicializa as matrizes de terminais e de variáveis com o caractere '\0'
-void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras])
+void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras], struct REGRA D0[MaxRegras])
 {
     int i, j = 0;
 
@@ -510,63 +516,78 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
     for(i = 0; i< MaxRegras; i++)
     {
         regras[i].marcador = 0;
-        regras[i].variavel = 0;
+        regras[i].variavel = -1;
         regras[i].nTermos = 0;
         regras[i].peso = 0;
+        //D0
+        D0[i].marcador = 0;
+        D0[i].variavel = -1;
+        D0[i].nTermos = 0;
+        D0[i].peso = 0;
         for(j=0; j<NVarRegra; j++)
         {
             regras[i].proxVar[j][0] = -1;
             regras[i].proxVar[j][1] = -1;
+            //D0
+            D0[i].proxVar[j][0] = -1;
+            D0[i].proxVar[j][1] = -1;
         }
     }
 
     printf("\nMatrizes inicializadas\n");
 }
 
-
-// Dada uma regra e um vetor de regras, procura a variável indicada pelo marcador da regra no lado esquerdo do vetor de regras
-// Retorna um vetor com todas as regras encontradas
-struct REGRA * procura_esquerda(struct REGRA regra_in, struct REGRA regras[MaxRegras])
+// Função que gera D0
+int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[MaxRegras], int k)
 {
+    //printf("\n\nIniciando D0 com var=%i e k=%i", var, k);
+    int k_buff = k;
     int i,j;
-    int k = 0;  // Contador das posições de regras_out
-    struct REGRA regras_out[MaxRegras];
-
     //----------------------------------------
-    // Inicializa a regra de saída. Caso não seja encontrada a regra de entrada no vetor, é assim que ela será devolvida
-    regras_out[k].marcador  = -1;
-    regras_out[k].variavel  = -1;
-    regras_out[k].nTermos   = -1;
-    regras_out[k].peso      = -1;
-    for(j=0; j<NVarRegra; j++)
-    {
-        regras_out[k].proxVar[j][0] = -1;
-        regras_out[k].proxVar[j][1] = -1;
-    }
-    // Fim da inicialização
+    // Adiciona as regras da atual inicial ao vetor de saída
     //----------------------------------------
-
-    // Percorre o vetor de regras
-    for(i=0; i < NRegras; i++)
+    for(i=0; i<MaxRegras; i++)  // Percorre vetor de regras
     {
-        if(regra_in.proxVar[regra_in.marcador][0] == regras[i].variavel)    // Se a variável de entrada for igual à variável na posição atual do array
+        if(regras[i].proxVar[0][0]==-1) // Se a regra não existe, está no fim do vetor
+            break;
+        if(regras[i].variavel == var)    // Se for regra da variável atual
         {
-            k++;    // Indica que foi colocado um elemento em regras_out
-            // Copia todos os dados da variável atual para a regra de saída
-            regras_out[k].marcador  = regras[i].marcador;
-            regras_out[k].variavel  = regras[i].variavel;
-            regras_out[k].nTermos   = regras[i].nTermos;
-            regras_out[k].peso      = regras[i].peso;
-            for(j=0; j<NVarRegra; j++)
+            //printf("\n\nRegra encontrada!");
+            // Verifica se a regra já está no vetor
+            int estaNoVetor = 0;
+            for(j=0; j<MaxRegras; j++)  // Percorre o vetor de regras
             {
-                regras_out[k].proxVar[j][0] = regras[i].proxVar[j][0];
-                regras_out[k].proxVar[j][1] = regras[i].proxVar[j][1];
+                if(regras[i].variavel==regras_out[j].variavel &&
+                   regras[i].proxVar[0][1]==regras_out[j].proxVar[0][1] &&
+                   regras[i].proxVar[regras[i].nTermos-1][1]==regras_out[j].proxVar[regras_out[i].nTermos-1][1])    // Se a regra já está no vetor de saída
+                {
+                    estaNoVetor = 1;
+                    //printf("\nRegra ja esta no vetor!");
+                    //printf("\nregras[i].variavel:%i\nregras_out[j].variavel: %i", regras[i].variavel, regras_out[j].variavel);
+                }
+            }
+            if(!estaNoVetor)   // Se a regra não está no vetor, a adciona
+            {
+                regras_out[k] = regras[i];  // Adiciona a regra ao vetor de saída
+                k++;
             }
         }
     }
+    //----------------------------------------
 
-    return regras_out;
+    for(i=0; i<k; i++)  // Percorre regras_out
+    {
+        if(regras_out[i].marcador!=-1 && regras_out[i].proxVar[regras_out[i].marcador][1]==1 && k!=k_buff)   // Se a regra existe e o valor indicado pelo marcador é uma regra e foi adicionado algo ao vetor de saída
+        {
+            //printf("\nMarcador: %i\nproxVar: %i, %i",regras_out[i].marcador, regras_out[i].proxVar[regras_out[i].marcador][0], regras_out[i].proxVar[regras_out[i].marcador][1]);
+            gera_D0(regras_out[i].proxVar[regras_out[i].marcador][0], regras, regras_out, k); // Para cada regra que existe, busca a variável apontada pelo marcador
+        }
+        else
+            break;
+    }
+    return k;
 }
+
 
 //main
 int main(int argc, const char * argv[])
@@ -574,17 +595,39 @@ int main(int argc, const char * argv[])
     char Terminais[MaxTerminais][Tamanho];
     char Variaveis[MaxVariaveis][Tamanho2];
     struct REGRA Regras[MaxRegras];
+    struct REGRA D0[MaxRegras];
     int Inicial = 0;
 
-    inicializa_matrizes(Terminais, Variaveis, Regras);
+    // Inicialização
+    inicializa_matrizes(Terminais, Variaveis, Regras, D0);
 
+    // Leitura do arquivo da gramática
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
+
+    // Geração de D0
+    D0[0]=Regras[Inicial];
+    printf("\nInicial: ");
+    int i = 0;
+    for(; i<strlen(Variaveis[Regras[Inicial].variavel]); i++)
+    {
+        if(Variaveis[Regras[Inicial].variavel][i]!='\0')
+            printf("%c",Variaveis[Regras[Inicial].variavel][i]);
+    }
+
+    // Fim da inicialização
+    //----------------------------------------
+    gera_D0(Inicial, Regras, D0, 0);
 
     imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
 
-    printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i", NVariaveis, NTerminais, NRegras);
+    printf("\n-----------------------------");
+    printf("\nD0");
+    imprime_regras(Terminais, Variaveis, D0);
+
+
+    printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n", NVariaveis, NTerminais, NRegras);
 
     return 0;
 }
