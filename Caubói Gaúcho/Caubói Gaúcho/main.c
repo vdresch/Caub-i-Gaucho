@@ -28,6 +28,8 @@
 #define Tamanho_Entrada 1000
 #define N_Terminais_Entrada 50
 
+#define MaxN 20
+
 
 //variaveis
 
@@ -563,8 +565,106 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
 
 
 // Função que gera Dn
-int gera_Dn(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[MaxRegras], int k, int n)
+int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras])
 {
+    int n=1;
+    int i,j,k,l;
+    k=0;    // Contadora da posição do vetor Dn[n]
+
+    for(i=0; i<(sizeof(terminais_entrada)/sizeof(terminais_entrada[0])); i++)   // Percorre o array terminais_entrada
+    {
+        // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a palavra sendo procurada
+        for(j=0; j<MaxRegras; j++)  // Percorre todas as regras de Dn-1
+        {
+            if(terminais_entrada[i] == Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0])    // Se a palavra da entrada estiver apontada pelo marcador de uma regra
+            {
+                int regraJaEmDn = 0;
+                // Verifica se a regra já está em Dn
+                for(l=0; l<MaxRegras; l++)  // Percorre Dn
+                {
+                    if(Dn[n-1][j].ID == Dn[n][l].ID)
+                        regraJaEmDn = 1;
+                }
+                if(!regraJaEmDn)    // Se não está, coloca
+                {
+                    Dn[n][k] = Dn[n-1][j];
+                    Dn[n][k].marcador++;    // Incrementa marcador
+                    k++;                    // Incrementa a posição do vetor de saída
+                }
+            }
+        }
+
+        for(j=0; j<k; j++)  // Percorre as novas regras geradas
+        {
+            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j);
+        }
+
+        k=0;
+        n++;
+    }
+    return 0;
+}
+
+// Função recursiva que continua Dn
+int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j)
+{
+    int l,m;
+    int k_buff = k;
+
+    if(Dn[n][j].marcador == Dn[n][j].nTermos)    // Se o marcador está na última posição
+    {
+        // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a variável sendo procurada
+        for(l=0; l<MaxRegras; l++)   // Percorre Dn-1
+        {
+            if(Dn[n][j].variavel == Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0])   // Se a variável estiver apontada pelo marcador de uma regra
+            {
+                int regraJaEmDn = 0;
+                // Verifica se a regra já está em Dn
+                for(m=0; m<MaxRegras; m++)  // Percorre Dn
+                {
+                    if(Dn[n-1][j].ID == Dn[n][m].ID)
+                        regraJaEmDn = 1;
+                }
+                if(!regraJaEmDn)    // Se não está, coloca
+                {
+                    Dn[n][k] = Dn[n-1][j];
+                    Dn[n][k].marcador++;    // Incrementa marcador
+                    k++;                    // Incrementa a posição do vetor de saída
+                }
+            }
+        }
+
+        for(j=k_buff; j<k; j++)  // Percorre as novas regras geradas
+        {
+            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j);
+        }
+    }
+    else
+    {
+        if(Dn[n-1][j].proxVar[Dn[n-1][j].marcador][1]==1)   // Se o elemento apontado pelo marcador for uma variável
+        {
+            for(l=0; l<NRegras; l++)    // Percorre toda a gramática
+            {
+                if(Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0] == regras[l].variavel)    // Se a variável apontada é igual à variável da esquerda da regra
+                {
+                    int regraJaEmDn = 0;
+                    // Verifica se a regra já está em Dn
+                    for(m=0; m<MaxRegras; m++)  // Percorre Dn
+                    {
+                        if(Dn[n-1][j].ID == Dn[n][m].ID)
+                            regraJaEmDn = 1;
+                    }
+                    if(!regraJaEmDn)    // Se não está, coloca
+                    {
+                        Dn[n][k] = Dn[n-1][j];
+                        Dn[n][k].marcador++;    // Incrementa marcador
+                        Dn[n][k].n = n;         // Informa que foi tirado da gramática por n
+                        k++;                    // Incrementa a posição do vetor de saída
+                    }
+                }
+            }
+        }
+    }
 
     return 0;
 }
@@ -591,7 +691,7 @@ void le_entrada(int terminais_entrada[], char lista_terminais[MaxTerminais][Tama
     }
     j=0;
 
-    printf("Digite aqui a entrada a ser reconhecida\n");
+    printf("Digite aqui a entrada a ser reconhecida\n(Caso o terminal desejado possua espaco, escrever o terminal inteiro entre aspas)\n");
 
     fgets (entrada_usuario, Tamanho_Entrada, stdin);
 
@@ -715,6 +815,7 @@ int main(int argc, const char * argv[])
     char Variaveis[MaxVariaveis][Tamanho2];
     struct REGRA Regras[MaxRegras];
     struct REGRA D0[MaxRegras];
+    struct REGRA Dn[MaxN][MaxRegras];
     int terminais_entrada[N_Terminais_Entrada]; //cada elemento do array deve ter a posição do array Terminais que possui o terminal digitado pelo usuario. exemplo: (the dog runs) deve fornecer um array {6, 3, 0} usando o arquivo sample.txt. se tiver um elemento -1, palavra não faz parte da linguagem
     int Inicial = 0;
 
@@ -730,13 +831,29 @@ int main(int argc, const char * argv[])
     // Geração de D0
     gera_D0(Inicial, Regras, D0, 0);
 
+    // Geração de Dn
+    int i = 0;
+    for(i=0; i<MaxRegras; i++)  // Dn[0] = D0
+    {
+        Dn[0][i] = D0[i];
+    }
+    gera_Dn(Regras, terminais_entrada, Terminais, Dn);
+
     imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
 
     printf("\n-----------------------------");
     printf("\nD0");
-    imprime_regras(Terminais, Variaveis, D0);
+    imprime_regras(Terminais, Variaveis, Dn[0]);
+
+    printf("\n-----------------------------");
+    printf("\nD1");
+    imprime_regras(Terminais, Variaveis, Dn[1]);
+
+    printf("\n-----------------------------");
+    printf("\nD2");
+    imprime_regras(Terminais, Variaveis, Dn[2]);
 
 
     printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n", NVariaveis, NTerminais, NRegras);
