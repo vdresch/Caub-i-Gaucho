@@ -517,9 +517,9 @@ void imprime_regras(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVar
 }
 
 // Inicializa as matrizes de terminais e de variáveis com o caractere '\0'
-void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras], struct REGRA D0[MaxRegras])
+void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVariaveis][Tamanho2], struct REGRA regras[MaxRegras], struct REGRA D0[MaxRegras], struct REGRA Dn[MaxN][MaxRegras])
 {
-    int i, j = 0;
+    int i, j, k = 0;
 
     for(i = 0; i< MaxTerminais; i++)
     {
@@ -557,6 +557,24 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
             //D0
             D0[i].proxVar[j][0] = -1;
             D0[i].proxVar[j][1] = -1;
+        }
+    }
+    //Dn
+    for(i=0; i<MaxN; i++)
+    {
+        for(j=0; j<MaxRegras; j++)
+        {
+            Dn[i][j].marcador = 0;
+            Dn[i][j].variavel = -1;
+            Dn[i][j].nTermos = 0;
+            Dn[i][j].peso = 0;
+            Dn[i][j].ID = -1;
+            Dn[i][j].n = -1;
+            for(k=0; k<NVarRegra; k++)
+            {
+                Dn[i][j].proxVar[k][0] = -1;
+                Dn[i][j].proxVar[k][1] = -1;
+            }
         }
     }
 
@@ -820,7 +838,7 @@ int main(int argc, const char * argv[])
     int Inicial = 0;
 
     // Inicialização
-    inicializa_matrizes(Terminais, Variaveis, Regras, D0);
+    inicializa_matrizes(Terminais, Variaveis, Regras, D0, Dn);
 
     // Leitura do arquivo da gramática
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
