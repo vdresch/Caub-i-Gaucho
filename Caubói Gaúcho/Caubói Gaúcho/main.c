@@ -356,9 +356,9 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             {
                 c = fgetc(f);
                 regras[j].peso += (c - 48)*0.1;
-                c = fgetc(f);
-                if(c != ' ' && c != '\t' && c != '\r')
-                    regras[j].peso += (c - 48)*0.01;
+                //c = fgetc(f);
+                //if(c != ' ' && c != '\t' && c != '\r')
+                  //  regras[j].peso += (c - 48)*0.01;
             }
 
             regras[j].ID = NRegras;
