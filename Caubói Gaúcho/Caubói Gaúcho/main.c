@@ -36,6 +36,7 @@
 int NVariaveis = 0;
 int NTerminais = 0;
 int NRegras = 0;
+int NTerminaisIN = 0;
 
 
 //estruturas
@@ -589,7 +590,7 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
     int i,j,k,l;
     k=0;    // Contadora da posição do vetor Dn[n]
 
-    for(i=0; i<(sizeof(terminais_entrada)/sizeof(terminais_entrada[0])); i++)   // Percorre o array terminais_entrada
+    for(i=0; i<NTerminaisIN; i++)   // Percorre o array terminais_entrada
     {
         printf("\n----------------------------\nIniciando geracao de Dn[%i]", n);
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a palavra sendo procurada
@@ -619,7 +620,7 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
         for(j=0; j<k; j++)  // Percorre as novas regras geradas
         {
-            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j);
+            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j, 1);
         }
 
         k=0;
@@ -629,7 +630,7 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 }
 
 // Função recursiva que continua Dn
-int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j)
+int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j, int marcadorAvanca)
 {
     int l,m;
     int k_buff = k;
@@ -640,8 +641,8 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a variável sendo procurada
         for(l=0; l<MaxRegras; l++)   // Percorre Dn-1
         {
-            if(Dn[n][j].variavel == Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0])   // Se a variável estiver apontada pelo marcador de uma regra
-            {
+            if(Dn[n][j].variavel == Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0] && Dn[n-1][l].proxVar[Dn[n-1][l].marcador][1]==1)   // Se a variável estiver apontada pelo marcador de uma regra
+            {                                                                                                                      //e for variável
                 printf("\nRegra encontrada!(ultima posicao)\n%i == %i",Dn[n][j].variavel, Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0]);
                 int regraJaEmDn = 0;
                 // Verifica se a regra já está em Dn
@@ -654,7 +655,8 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                 {
                     printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
                     Dn[n][k] = Dn[n-1][l];
-                    Dn[n][k].marcador++;    // Incrementa marcador
+                    if(marcadorAvanca)
+                        Dn[n][k].marcador++;    // Incrementa marcador
                     k++;                    // Incrementa a posição do vetor de saída
                 }
                 else
@@ -664,7 +666,7 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
         for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
         {
-            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l);
+            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
         }
     }
     else
@@ -696,6 +698,10 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                         printf("\nRegra já está em Dn!\n");
                 }
             }
+            /*for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
+            {
+                Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 0);
+            }*/
         }
     }
 
@@ -774,6 +780,7 @@ void le_entrada(int terminais_entrada[], char lista_terminais[MaxTerminais][Tama
             if(strcmp(terminal[i], lista_terminais[j]) == 0 && lista_terminais[j][0] != '\0')
             {
                 terminais_entrada[k] = j;
+                NTerminaisIN++;
                 palavrasSaoTerminais = 1;
             }
         }
