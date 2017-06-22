@@ -591,11 +591,13 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
     for(i=0; i<(sizeof(terminais_entrada)/sizeof(terminais_entrada[0])); i++)   // Percorre o array terminais_entrada
     {
+        printf("\n----------------------------\nIniciando geracao de Dn[%i]", n);
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a palavra sendo procurada
         for(j=0; j<MaxRegras; j++)  // Percorre todas as regras de Dn-1
         {
-            if(terminais_entrada[i] == Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0])    // Se a palavra da entrada estiver apontada pelo marcador de uma regra
-            {
+            if(terminais_entrada[i] == Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0] && Dn[n-1][j].proxVar[Dn[n-1][j].marcador][1] == 2)    // Se a palavra da entrada estiver apontada pelo marcador de uma regra
+            {                                                                                                                            //e for um terminal
+                printf("\nRegra encontrada (terminal)!\n%i == %i",terminais_entrada[i],Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0]);
                 int regraJaEmDn = 0;
                 // Verifica se a regra já está em Dn
                 for(l=0; l<MaxRegras; l++)  // Percorre Dn
@@ -605,10 +607,13 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                 }
                 if(!regraJaEmDn)    // Se não está, coloca
                 {
+                    printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
                     Dn[n][k] = Dn[n-1][j];
                     Dn[n][k].marcador++;    // Incrementa marcador
                     k++;                    // Incrementa a posição do vetor de saída
                 }
+                else
+                    printf("\nRegra já está em Dn!\n");
             }
         }
 
@@ -631,54 +636,64 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
     if(Dn[n][j].marcador == Dn[n][j].nTermos)    // Se o marcador está na última posição
     {
+        printf("\nMarcador na ultima posicao.");
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a variável sendo procurada
         for(l=0; l<MaxRegras; l++)   // Percorre Dn-1
         {
-            if(Dn[n][j].variavel == Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0])   // Se a variável estiver apontada pelo marcador de uma regra
+            if(Dn[n][j].variavel == Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0])   // Se a variável estiver apontada pelo marcador de uma regra
             {
+                printf("\nRegra encontrada!(ultima posicao)\n%i == %i",Dn[n][j].variavel, Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0]);
                 int regraJaEmDn = 0;
                 // Verifica se a regra já está em Dn
                 for(m=0; m<MaxRegras; m++)  // Percorre Dn
                 {
-                    if(Dn[n-1][j].ID == Dn[n][m].ID)
+                    if(Dn[n-1][l].ID == Dn[n][m].ID)
                         regraJaEmDn = 1;
                 }
                 if(!regraJaEmDn)    // Se não está, coloca
                 {
-                    Dn[n][k] = Dn[n-1][j];
+                    printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
+                    Dn[n][k] = Dn[n-1][l];
                     Dn[n][k].marcador++;    // Incrementa marcador
                     k++;                    // Incrementa a posição do vetor de saída
                 }
+                else
+                    printf("\nRegra já está em Dn!\n");
             }
         }
 
-        for(j=k_buff; j<k; j++)  // Percorre as novas regras geradas
+        for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
         {
-            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j);
+            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l);
         }
     }
     else
     {
-        if(Dn[n-1][j].proxVar[Dn[n-1][j].marcador][1]==1)   // Se o elemento apontado pelo marcador for uma variável
+        printf("\nMarcador nao esta na ultima posicao.");
+        if(Dn[n][j].proxVar[Dn[n][j].marcador][1]==1)   // Se o elemento apontado pelo marcador for uma variável
         {
+            printf("\nE variavel");
             for(l=0; l<NRegras; l++)    // Percorre toda a gramática
             {
-                if(Dn[n-1][j].proxVar[Dn[n-1][j].marcador][0] == regras[l].variavel)    // Se a variável apontada é igual à variável da esquerda da regra
+                if(Dn[n][j].proxVar[Dn[n][j].marcador][0] == regras[l].variavel)    // Se a variável apontada é igual à variável da esquerda da regra
                 {
+                    printf("\nRegra encontrada!\n%i == %i",Dn[n][j].proxVar[Dn[n][j].marcador][0], regras[l].variavel);
                     int regraJaEmDn = 0;
                     // Verifica se a regra já está em Dn
                     for(m=0; m<MaxRegras; m++)  // Percorre Dn
                     {
-                        if(Dn[n-1][j].ID == Dn[n][m].ID)
+                        if(regras[l].ID == Dn[n][m].ID)
                             regraJaEmDn = 1;
                     }
                     if(!regraJaEmDn)    // Se não está, coloca
                     {
-                        Dn[n][k] = Dn[n-1][j];
-                        Dn[n][k].marcador++;    // Incrementa marcador
+                        printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
+                        Dn[n][k] = regras[l];
                         Dn[n][k].n = n;         // Informa que foi tirado da gramática por n
                         k++;                    // Incrementa a posição do vetor de saída
                     }
+                    else
+                        printf("\nRegra já está em Dn!\n");
                 }
             }
         }
