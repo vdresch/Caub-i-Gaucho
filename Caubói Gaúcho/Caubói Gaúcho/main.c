@@ -851,6 +851,18 @@ int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[Max
     return k;
 }
 
+//Testa se a entrada foi aceita
+entrada_aceita(struct REGRA Dn[MaxN][MaxRegras], int inicial)
+{
+    int i,j;
+    for(i=0; i<MaxRegras; i++)  // Percorre Dn[NTerminaisIN]
+    {
+        if(Dn[NTerminaisIN][i].variavel == inicial && Dn[NTerminaisIN][i].marcador == Dn[NTerminaisIN][i].nTermos)
+            return 1;
+    }
+    return 0;
+}
+
 
 //main
 int main(int argc, const char * argv[])
@@ -883,6 +895,9 @@ int main(int argc, const char * argv[])
     }
     gera_Dn(Regras, terminais_entrada, Terminais, Dn);
 
+
+
+    // Imprime
     imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
@@ -894,6 +909,11 @@ int main(int argc, const char * argv[])
         //puts(terminais_entrada[i]);
         imprime_regras(Terminais, Variaveis, Dn[i]);
     }
+
+    if(entrada_aceita(Dn, Inicial))
+        printf("\nENTRADA ACEITA!\n\n");
+    else
+        printf("\nENTRADA Rejeitada!\n\n");
 
     printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n", NVariaveis, NTerminais, NRegras);
 
