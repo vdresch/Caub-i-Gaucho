@@ -632,41 +632,45 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 // Função recursiva que continua Dn
 int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j, int marcadorAvanca)
 {
-    int l,m;
+    int l,m,n_cont;
     int k_buff = k;
 
     if(Dn[n][j].marcador == Dn[n][j].nTermos)    // Se o marcador está na última posição
     {
         printf("\nMarcador na ultima posicao.");
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a variável sendo procurada
-        for(l=0; l<MaxRegras; l++)   // Percorre Dn-1
+        for(n_cont = n; n_cont>0; n_cont--) // Percorre todos os Dns gerados anteriormente
         {
-            if(Dn[n][j].variavel == Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0] && Dn[n-1][l].proxVar[Dn[n-1][l].marcador][1]==1)   // Se a variável estiver apontada pelo marcador de uma regra
-            {                                                                                                                      //e for variável
-                printf("\nRegra encontrada!(ultima posicao)\n%i == %i",Dn[n][j].variavel, Dn[n-1][l].proxVar[Dn[n-1][l].marcador][0]);
-                int regraJaEmDn = 0;
-                // Verifica se a regra já está em Dn
-                for(m=0; m<MaxRegras; m++)  // Percorre Dn
-                {
-                    if(Dn[n-1][l].ID == Dn[n][m].ID)
-                        regraJaEmDn = 1;
+            printf("\n\nn=%i\n\n", n);
+            for(l=0; l<MaxRegras; l++)   // Percorre Dn-1
+            {
+                if(Dn[n][j].variavel == Dn[n_cont-1][l].proxVar[Dn[n_cont-1][l].marcador][0] && Dn[n_cont-1][l].proxVar[Dn[n_cont-1][l].marcador][1]==1)   // Se a variável estiver apontada pelo marcador de uma regra
+                {                                                                                                                      //e for variável
+                    printf("\nRegra encontrada!(ultima posicao)\n%i == %i",Dn[n][j].variavel, Dn[n_cont-1][l].proxVar[Dn[n_cont-1][l].marcador][0]);
+                    int regraJaEmDn = 0;
+                    // Verifica se a regra já está em Dn
+                    for(m=0; m<MaxRegras; m++)  // Percorre Dn
+                    {
+                        if(Dn[n_cont-1][l].ID == Dn[n][m].ID)
+                            regraJaEmDn = 1;
+                    }
+                    if(!regraJaEmDn)    // Se não está, coloca
+                    {
+                        printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
+                        Dn[n][k] = Dn[n_cont-1][l];
+                        if(marcadorAvanca)
+                            Dn[n][k].marcador++;    // Incrementa marcador
+                        k++;                    // Incrementa a posição do vetor de saída
+                    }
+                    else
+                        printf("\nRegra já está em Dn!\n");
                 }
-                if(!regraJaEmDn)    // Se não está, coloca
-                {
-                    printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
-                    Dn[n][k] = Dn[n-1][l];
-                    if(marcadorAvanca)
-                        Dn[n][k].marcador++;    // Incrementa marcador
-                    k++;                    // Incrementa a posição do vetor de saída
-                }
-                else
-                    printf("\nRegra já está em Dn!\n");
             }
-        }
 
-        for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
-        {
-            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
+            for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
+            {
+                Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
+            }
         }
     }
     else
@@ -698,10 +702,10 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                         printf("\nRegra já está em Dn!\n");
                 }
             }
-            /*for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
+            for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
             {
-                Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 0);
-            }*/
+                Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
+            }
         }
     }
 
@@ -883,18 +887,13 @@ int main(int argc, const char * argv[])
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
 
-    printf("\n-----------------------------");
-    printf("\nD0");
-    imprime_regras(Terminais, Variaveis, Dn[0]);
-
-    printf("\n-----------------------------");
-    printf("\nD1");
-    imprime_regras(Terminais, Variaveis, Dn[1]);
-
-    printf("\n-----------------------------");
-    printf("\nD2");
-    imprime_regras(Terminais, Variaveis, Dn[2]);
-
+    for(i=0; i<=NTerminaisIN; i++)
+    {
+        printf("\n-----------------------------");
+        printf("\nD%i", i);
+        //puts(terminais_entrada[i]);
+        imprime_regras(Terminais, Variaveis, Dn[i]);
+    }
 
     printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n", NVariaveis, NTerminais, NRegras);
 
