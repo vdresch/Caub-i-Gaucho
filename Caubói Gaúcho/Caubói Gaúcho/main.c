@@ -420,7 +420,7 @@ void imprime_variaveis(char Variaveis[MaxVariaveis][Tamanho2], int inicial)
         {
             printf("%c", Variaveis[inicial][i]);
         }
-        printf("\n\nRestante:\n");
+        printf("\n\nTodas Variaveis:\n");
         for(i = 0; i< MaxVariaveis; i++)
         {
             for(j = 0; j<Tamanho2; j++)
@@ -581,15 +581,26 @@ void inicializa_matrizes(char terminais[MaxTerminais][Tamanho], char variaveis[M
 
 
 // Função que gera Dn
-int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras])
+int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int n_entrada, int terminal_entrada)  // n_entrada == 0 -> não há n de entrada
 {
-    int n=1;
+    //printf("\n\nEntrou em gera_dn\n\n")  ;                                                                                                                                                                                     // se n_entrada == 0, terminal_entrada é ignorado
+    int n;
     int i,j,k,l;
     k=0;    // Contadora da posição do vetor Dn[n]
+    if(!n_entrada)
+        n=1;
+    else
+        n = n_entrada;
+
 
     for(i=0; i<NTerminaisIN; i++)   // Percorre o array terminais_entrada
     {
-        printf("\n----------------------------\nIniciando geracao de Dn[%i]", n);
+        if(n_entrada)
+            terminais_entrada[i] = terminal_entrada;
+
+        //printf("\nn: %i\nterminal_entrada: %i\n", n, terminais_entrada[i]);
+
+        //printf("\n----------------------------\nIniciando geracao de Dn[%i]", n);
         // Guarda em Dn todas as regras de Dn-1 cujo marcador aponta para a palavra sendo procurada
         for(j=0; j<MaxRegras; j++)  // Percorre todas as regras de Dn-1
         {
@@ -600,12 +611,12 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                 // Verifica se a regra já está em Dn
                 for(l=0; l<MaxRegras; l++)  // Percorre Dn
                 {
-                    if(Dn[n-1][j].ID == Dn[n][l].ID)
+                    if(Dn[n-1][j].ID == Dn[n][l].ID && Dn[n-1][j].marcador+1 == Dn[n][l].marcador)
                         regraJaEmDn = 1;
                 }
                 if(!regraJaEmDn)    // Se não está, coloca
                 {
-                   // printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
+                    //printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
                     Dn[n][k] = Dn[n-1][j];
                     Dn[n][k].marcador++;    // Incrementa marcador
                     k++;                    // Incrementa a posição do vetor de saída
@@ -618,17 +629,20 @@ int gera_Dn(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
         for(j=0; j<k; j++)  // Percorre as novas regras geradas
         {
-            Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, j, 1);
+            Dn_loop(regras, lista_terminais, Dn, k, n, j, 1);
         }
 
         k=0;
         n++;
+
+        if(n_entrada)
+            break;
     }
     return 0;
 }
 
 // Função recursiva que continua Dn
-int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j, int marcadorAvanca)
+int Dn_loop(struct REGRA regras[MaxRegras], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int k, int n, int j)
 {
     int l,m,n_cont;
     int k_buff = k;
@@ -649,15 +663,14 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                     // Verifica se a regra já está em Dn
                     for(m=0; m<MaxRegras; m++)  // Percorre Dn
                     {
-                        if(Dn[n_cont-1][l].ID == Dn[n][m].ID)
+                        if(Dn[n_cont-1][l].ID == Dn[n][m].ID && Dn[n_cont-1][l].marcador+1 == Dn[n][m].marcador)
                             regraJaEmDn = 1;
                     }
                     if(!regraJaEmDn)    // Se não está, coloca
                     {
-                       // printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
+                        //printf("\nRegra adicionada em Dn[%i][%i]!\n", n, k);
                         Dn[n][k] = Dn[n_cont-1][l];
-                        if(marcadorAvanca)
-                            Dn[n][k].marcador++;    // Incrementa marcador
+                        Dn[n][k].marcador++;    // Incrementa marcador
                         k++;                    // Incrementa a posição do vetor de saída
                     }
                     //else
@@ -668,7 +681,7 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
 
             for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
             {
-                k=Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
+                k=Dn_loop(regras, lista_terminais, Dn, k, n, l);
             }
         }
     }
@@ -687,7 +700,7 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
                     // Verifica se a regra já está em Dn
                     for(m=0; m<MaxRegras; m++)  // Percorre Dn
                     {
-                        if(regras[l].ID == Dn[n][m].ID)
+                        if(regras[l].ID == Dn[n][m].ID && regras[l].marcador == Dn[n][m].marcador)
                             regraJaEmDn = 1;
                     }
                     if(!regraJaEmDn)    // Se não está, coloca
@@ -704,7 +717,7 @@ int Dn_loop(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_
             for(l=k_buff; l<k; l++)  // Percorre as novas regras geradas
             {
                 //printf("\nk_loopelse:%i", k);
-                k=Dn_loop(regras, terminais_entrada, lista_terminais, Dn, k, n, l, 1);
+                k=Dn_loop(regras, lista_terminais, Dn, k, n, l);
             }
         }
     }
@@ -734,7 +747,7 @@ void le_entrada(int terminais_entrada[], char lista_terminais[MaxTerminais][Tama
     }
     j=0;
 
-    printf("Digite aqui a entrada a ser reconhecida\n(Caso o terminal desejado possua espaco, escrever o terminal inteiro entre aspas)\n");
+    printf("\n\nDigite aqui a entrada a ser reconhecida\n(Caso o terminal desejado possua espaco, escrever o terminal inteiro entre aspas)\n");
 
     fgets (entrada_usuario, Tamanho_Entrada, stdin);
 
@@ -852,9 +865,9 @@ int gera_D0(int var, struct REGRA regras[MaxRegras], struct REGRA regras_out[Max
 }
 
 //Testa se a entrada foi aceita
-entrada_aceita(struct REGRA Dn[MaxN][MaxRegras], int inicial)
+int entrada_aceita(struct REGRA Dn[MaxN][MaxRegras], int inicial)
 {
-    int i,j;
+    int i;
     for(i=0; i<MaxRegras; i++)  // Percorre Dn[NTerminaisIN]
     {
         if(Dn[NTerminaisIN][i].variavel == inicial && Dn[NTerminaisIN][i].marcador == Dn[NTerminaisIN][i].nTermos)
@@ -864,6 +877,81 @@ entrada_aceita(struct REGRA Dn[MaxN][MaxRegras], int inicial)
 }
 
 
+// Função que gera um roteiro aceito pela gramática
+void gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int resultado[MaxTerminais])
+{
+    float terminaisDn[MaxTerminais][2]; // terminaisDn[i][0] == valor  ;  terminaisDn[i][1] == peso
+    int i = 0;
+    int n = 0;
+    int k = 0;
+    int r = 0;  // Contador do vetor resultado
+    int encontrouTerminal = 0;
+
+    for(i=0; i<MaxTerminais; i++)   // Percorre resultado para inicializá-lo
+    {
+        resultado[i] = -1;
+    }
+
+    for(n=0; n<MaxN; n++)    // Percorre todos Dn
+    {
+        k=0;
+        encontrouTerminal = 0;
+        for(i=0; i<MaxTerminais; i++)   // Percorre terminaisDn para limpá-lo
+        {
+            terminaisDn[i][0] = -1;
+            terminaisDn[i][1] = -1;
+        }
+
+        // Encontra todos os terminais de Dn[n] e os coloca em um vetor
+        for(i=0; i<MaxRegras; i++)  // Percorre as regras de Dn
+        {
+            if(Dn[n][i].proxVar[Dn[n][i].marcador][1] == -1 && Dn[n][i].marcador != Dn[n][i].nTermos)    // Se não existe próximo valor e marcador não aponta para posição final
+            {
+                //printf("\nDn[%i][%i].proxvar[marcador==%i][1] == %i", n, i, Dn[n][i].marcador, Dn[n][i].proxVar[Dn[n][i].marcador][1]);
+                break;
+            }
+            else if(Dn[n][i].proxVar[Dn[n][i].marcador][1] == 2) // Se Dn[n][i] tiver marcador apontando terminal
+            {
+                //printf("\nterminal encontrado");
+                terminaisDn[k][0] = Dn[n][i].proxVar[Dn[n][i].marcador][0];    // Adiciona ao vetor de terminais
+                //printf("\nterminaisDn[k][0] == %i", terminaisDn[k][0]);
+                terminaisDn[k][1] = Dn[n][i].peso;
+                //printf("\npeso == %f", terminaisDn[k][1]);
+                k++;
+                encontrouTerminal = 1;
+            }
+        }
+
+        if(encontrouTerminal)
+        {
+            // Escolhe aleatoriamente entre um dos terminais
+            resultado[r] = escolha_aleatoria(terminaisDn, resultado);
+            //printf("\nEscolha aleatoria: %i", resultado[r]);
+
+            // Gera Dn
+            gera_Dn(regras, terminais_entrada, lista_terminais, Dn, (int)(n+1), resultado[r]);
+            //printf("\nDn[%i]:", n+1);
+            int a = 0;
+
+            r++;
+        }
+        else
+        {
+            //printf("\nERRO! Nao foi encontrado terminal em D%i", n);  // Se descomentado, sempre retornará erro no fim da geração
+            break;
+        }
+    }
+}
+
+// Função que recebe um vetor e retorna um terminal (int) escolhido aleatoriamente
+// terminaisDn[n][0] -> valor int do terminal
+// terminaisDn[n][1] -> peso float do terminal
+int escolha_aleatoria(float terminaisDn[MaxTerminais][2])
+{
+    int retorno = terminaisDn[0][0];
+    return retorno;
+}
+
 //main
 int main(int argc, const char * argv[])
 {
@@ -872,8 +960,13 @@ int main(int argc, const char * argv[])
     struct REGRA Regras[MaxRegras];
     struct REGRA D0[MaxRegras];
     struct REGRA Dn[MaxN][MaxRegras];
+    int saidaAleatoria[MaxTerminais];
     int terminais_entrada[N_Terminais_Entrada]; //cada elemento do array deve ter a posição do array Terminais que possui o terminal digitado pelo usuario. exemplo: (the dog runs) deve fornecer um array {6, 3, 0} usando o arquivo sample.txt. se tiver um elemento -1, palavra não faz parte da linguagem
     int Inicial = 0;
+    int menu = 1;
+    int parser = 0;
+    int aleatorio = 0;
+    int i = 0;
 
     // Inicialização
     inicializa_matrizes(Terminais, Variaveis, Regras, D0, Dn);
@@ -881,39 +974,103 @@ int main(int argc, const char * argv[])
     // Leitura do arquivo da gramática
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
 
-    //Le entrada do usuario e completa array terminais_entrada
-    le_entrada(terminais_entrada, Terminais);
+    // Menu
+    while(menu)
+    {
+        printf("\n-------------------------------------------");
+        printf("\n|                                         |");
+        printf("\n|    Parser e Gerador de entradas com     |");
+        printf("\n|           Algoritmo de Earley           |");
+        printf("\n|                                         |");
+        printf("\n|                                         |");
+        printf("\n-------------------------------------------");
+        printf("\nInsira um caractere para escolher a");
+        printf("\nfuncionalidade desejada\n");
+        printf("\n       p - Parser                          ");
+        printf("\n       a - Gerador aleatorio de entradas   \n");
+
+        char entrada = ' ';
+        scanf("%c", &entrada);
+        getchar();
+
+        printf("-------------------------------------------\n\n");
+
+        if(entrada == 'p')
+        {
+            menu = 0;
+            parser = 1;
+        }
+        else if(entrada == 'a')
+        {
+            menu = 0;
+            aleatorio = 1;
+        }
+        else
+        {
+            system("cls");
+            printf("\nERRO! Por favor, insira uma entrada valida.\n");
+        }
+    }
 
     // Geração de D0
     gera_D0(Inicial, Regras, D0, 0);
 
-    // Geração de Dn
-    int i = 0;
+    // Atribuicao de D0 para Dn[0]
     for(i=0; i<MaxRegras; i++)  // Dn[0] = D0
     {
         Dn[0][i] = D0[i];
     }
-    gera_Dn(Regras, terminais_entrada, Terminais, Dn);
 
+    if(parser)
+    {
+        //Le entrada do usuario e completa array terminais_entrada
+        le_entrada(terminais_entrada, Terminais);
 
+        // Geração de Dn
+        gera_Dn(Regras, terminais_entrada, Terminais, Dn, 0, 0);
+    }
+    else if(aleatorio)
+    {
+        NTerminaisIN = 1;
+
+        // Geração de entrada aleatória
+        gera_entrada(Regras, terminais_entrada, Terminais, Dn, saidaAleatoria);
+    }
 
     // Imprime
     imprime_regras(Terminais, Variaveis, Regras);
     imprime_terminais(Terminais);
     imprime_variaveis(Variaveis, Inicial);
 
-    for(i=0; i<=NTerminaisIN; i++)
+    if(parser)
     {
-        printf("\n-----------------------------");
-        printf("\nD%i", i);
-        //puts(terminais_entrada[i]);
-        imprime_regras(Terminais, Variaveis, Dn[i]);
-    }
+        for(i=0; i<=NTerminaisIN; i++)
+        {
+            printf("\n------------------------------");
+            printf("\nD%i", i);
+            imprime_regras(Terminais, Variaveis, Dn[i]);
+        }
 
-    if(entrada_aceita(Dn, Inicial))
-        printf("\nENTRADA ACEITA!\n\n");
-    else
-        printf("\nENTRADA Rejeitada!\n\n");
+        if(entrada_aceita(Dn, Inicial))
+            printf("\nENTRADA ACEITA!\n\n");
+        else
+            printf("\nENTRADA Rejeitada!\n\n");
+    }
+    else if(aleatorio)
+    {
+        // Imprime saidaAleatoria
+        printf("\n------------------------------");
+        printf("\nRoteiro gerado aleatoriamente:");
+        printf("\n------------------------------\n");
+        for(i=0; i<MaxTerminais; i++)
+        {
+            if(saidaAleatoria[i] == -1)
+                break;
+            else
+                puts(Terminais[saidaAleatoria[i]]);
+        }
+        printf("------------------------------\n\n");
+    }
 
     printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n\nInsira qualquer caractere para terminar o programa\n", NVariaveis, NTerminais, NRegras);
     getchar();
