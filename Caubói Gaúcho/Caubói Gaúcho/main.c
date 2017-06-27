@@ -950,7 +950,19 @@ int gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char l
 // terminaisDn[n][1] -> peso float do terminal
 int escolha_aleatoria(float terminaisDn[MaxTerminais][2])
 {
-    int retorno = terminaisDn[0][0];
+    int n = 0;
+    int aux = 0;
+    int controle = 1;
+    
+    while(controle)
+    {
+        n = rand() % MaxTerminais;
+        aux = rand() % 100;
+        if(aux/100 <= terminaisDn[n][1])
+            controle = 0;
+    }
+    
+    int retorno = terminaisDn[n][0];
     return retorno;
 }
 
