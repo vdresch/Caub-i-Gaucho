@@ -9,6 +9,7 @@
 //bibliotecas
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -23,7 +24,7 @@
 #define NVarRegra 10
 #define MaxRegras 60
 
-#define arquivo "gramatica2.txt"
+char arquivo[60];
 
 #define Tamanho_Entrada 1000
 #define N_Terminais_Entrada 100
@@ -72,7 +73,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
     if (f == NULL)
     {
         printf("Error opening file\n");
-        return;
+        exit(0);
     }
     else
     {
@@ -878,7 +879,7 @@ int entrada_aceita(struct REGRA Dn[MaxN][MaxRegras], int inicial)
 
 
 // Função que gera um roteiro aceito pela gramática
-void gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int resultado[MaxTerminais])
+int gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char lista_terminais[MaxTerminais][Tamanho], struct REGRA Dn[MaxN][MaxRegras], int resultado[MaxTerminais])
 {
     float terminaisDn[MaxTerminais][2]; // terminaisDn[i][0] == valor  ;  terminaisDn[i][1] == peso
     int i = 0;
@@ -941,6 +942,7 @@ void gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char 
             break;
         }
     }
+    return r;
 }
 
 // Função que recebe um vetor e retorna um terminal (int) escolhido aleatoriamente
@@ -966,7 +968,13 @@ int main(int argc, const char * argv[])
     int menu = 1;
     int parser = 0;
     int aleatorio = 0;
+    int exit = 0;
     int i = 0;
+    int nTerminaisAleatorio = 0;
+
+    // Entrada do arquivo da gramatica
+    printf("\nInsira o nome do arquivo da gramatica\n");
+    scanf ("%[^\n]%*c", arquivo);
 
     // Inicialização
     inicializa_matrizes(Terminais, Variaveis, Regras, D0, Dn);
@@ -974,105 +982,132 @@ int main(int argc, const char * argv[])
     // Leitura do arquivo da gramática
     le_gramatica(Terminais, Variaveis, &Inicial, Regras);
 
-    // Menu
-    while(menu)
+    // Loop principal
+    while(!exit)
     {
-        printf("\n-------------------------------------------");
-        printf("\n|                                         |");
-        printf("\n|    Parser e Gerador de entradas com     |");
-        printf("\n|           Algoritmo de Earley           |");
-        printf("\n|                                         |");
-        printf("\n|                                         |");
-        printf("\n-------------------------------------------");
-        printf("\nInsira um caractere para escolher a");
-        printf("\nfuncionalidade desejada\n");
-        printf("\n       p - Parser                          ");
-        printf("\n       a - Gerador aleatorio de entradas   \n");
-
-        char entrada = ' ';
-        scanf("%c", &entrada);
-        getchar();
-
-        printf("-------------------------------------------\n\n");
-
-        if(entrada == 'p')
-        {
-            menu = 0;
-            parser = 1;
-        }
-        else if(entrada == 'a')
-        {
-            menu = 0;
-            aleatorio = 1;
-        }
-        else
+        // Menu
+        while(menu)
         {
             system("cls");
-            printf("\nERRO! Por favor, insira uma entrada valida.\n");
-        }
-    }
+            printf("\n-------------------------------------------");
+            printf("\n|                                         |");
+            printf("\n|    Parser e Gerador de entradas com     |");
+            printf("\n|           Algoritmo de Earley           |");
+            printf("\n|                                         |");
+            printf("\n|                                         |");
+            printf("\n-------------------------------------------");
 
-    // Geração de D0
-    gera_D0(Inicial, Regras, D0, 0);
+            printf("\nInsira um caractere para escolher a");
+            printf("\nfuncionalidade desejada\n");
+            printf("\n       p - Parser                          ");
+            printf("\n       a - Gerador aleatorio de entradas   \n");
 
-    // Atribuicao de D0 para Dn[0]
-    for(i=0; i<MaxRegras; i++)  // Dn[0] = D0
-    {
-        Dn[0][i] = D0[i];
-    }
+            char entrada = ' ';
+            scanf("%c", &entrada);
+            getchar();
 
-    if(parser)
-    {
-        //Le entrada do usuario e completa array terminais_entrada
-        le_entrada(terminais_entrada, Terminais);
+            printf("-------------------------------------------\n\n");
 
-        // Geração de Dn
-        gera_Dn(Regras, terminais_entrada, Terminais, Dn, 0, 0);
-    }
-    else if(aleatorio)
-    {
-        NTerminaisIN = 1;
-
-        // Geração de entrada aleatória
-        gera_entrada(Regras, terminais_entrada, Terminais, Dn, saidaAleatoria);
-    }
-
-    // Imprime
-    imprime_regras(Terminais, Variaveis, Regras);
-    imprime_terminais(Terminais);
-    imprime_variaveis(Variaveis, Inicial);
-
-    if(parser)
-    {
-        for(i=0; i<=NTerminaisIN; i++)
-        {
-            printf("\n------------------------------");
-            printf("\nD%i", i);
-            imprime_regras(Terminais, Variaveis, Dn[i]);
-        }
-
-        if(entrada_aceita(Dn, Inicial))
-            printf("\nENTRADA ACEITA!\n\n");
-        else
-            printf("\nENTRADA Rejeitada!\n\n");
-    }
-    else if(aleatorio)
-    {
-        // Imprime saidaAleatoria
-        printf("\n------------------------------");
-        printf("\nRoteiro gerado aleatoriamente:");
-        printf("\n------------------------------\n");
-        for(i=0; i<MaxTerminais; i++)
-        {
-            if(saidaAleatoria[i] == -1)
-                break;
+            if(entrada == 'p')
+            {
+                menu = 0;
+                parser = 1;
+                exit = 1;
+            }
+            else if(entrada == 'a')
+            {
+                menu = 0;
+                aleatorio = 1;
+            }
             else
-                puts(Terminais[saidaAleatoria[i]]);
+            {
+                system("cls");
+                printf("\nERRO! Por favor, insira uma entrada valida.\n");
+            }
         }
-        printf("------------------------------\n\n");
+
+        // Geração de D0
+        gera_D0(Inicial, Regras, D0, 0);
+
+        // Atribuicao de D0 para Dn[0]
+        for(i=0; i<MaxRegras; i++)  // Dn[0] = D0
+        {
+            Dn[0][i] = D0[i];
+        }
+
+        if(parser)
+        {
+            //Le entrada do usuario e completa array terminais_entrada
+            le_entrada(terminais_entrada, Terminais);
+
+            // Geração de Dn
+            gera_Dn(Regras, terminais_entrada, Terminais, Dn, 0, 0);
+        }
+        else if(aleatorio)
+        {
+            NTerminaisIN = 1;
+
+            // Geração de entrada aleatória
+            nTerminaisAleatorio = gera_entrada(Regras, terminais_entrada, Terminais, Dn, saidaAleatoria);
+        }
+
+        // Imprime
+        imprime_regras(Terminais, Variaveis, Regras);
+        imprime_terminais(Terminais);
+        imprime_variaveis(Variaveis, Inicial);
+
+        if(parser)
+        {
+            for(i=0; i<=NTerminaisIN; i++)
+            {
+                printf("\n------------------------------");
+                printf("\nD%i", i);
+                imprime_regras(Terminais, Variaveis, Dn[i]);
+            }
+
+            if(entrada_aceita(Dn, Inicial))
+                printf("\nENTRADA ACEITA!\n\n");
+            else
+                printf("\nENTRADA Rejeitada!\n\n");
+        }
+        else if(aleatorio)
+        {
+            // Imprime saidaAleatoria
+            printf("\n------------------------------");
+            printf("\nRoteiro gerado aleatoriamente:");
+            printf("\n------------------------------\n");
+            for(i=0; i<nTerminaisAleatorio; i++)
+            {
+                if(saidaAleatoria[i] == -1)
+                    break;
+                else
+                    puts(Terminais[saidaAleatoria[i]]);
+            }
+            printf("------------------------------\n\n");
+        }
+
+        printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n\n", NVariaveis, NTerminais, NRegras);
+
+        while (aleatorio)
+        {
+            printf("\nDeseja gerar um novo roteiro? insira 's' para sim, 'n' para nao\n");
+            char entrada = ' ';
+            scanf("%c", &entrada);
+            getchar();
+            if(entrada == 'n')
+            {
+                exit = 1;
+                break;
+            }
+            else if(entrada == 's')
+            {
+                exit = 0;
+                break;
+            }
+        }
     }
 
-    printf("NVariaveis: %i\nNTerminais: %i\nNRegras: %i\n\nInsira qualquer caractere para terminar o programa\n", NVariaveis, NTerminais, NRegras);
+    printf("\n\nInsira qualquer caractere para terminar o programa\n");
     getchar();
 
     return 0;
