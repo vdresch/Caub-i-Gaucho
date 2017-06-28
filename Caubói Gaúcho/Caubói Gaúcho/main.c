@@ -38,6 +38,7 @@ int NVariaveis = 0;
 int NTerminais = 0;
 int NRegras = 0;
 int NTerminaisIN = 0;
+int idInicial = -1;
 
 
 //estruturas
@@ -361,6 +362,8 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             }
 
             regras[j].ID = NRegras;
+            if(regras[j].variavel == *inicial)
+                idInicial = NRegras;
 
             NRegras ++;
 
@@ -375,6 +378,7 @@ void le_gramatica(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVaria
             k=0;
         }
 
+        fclose(f);
 
         return;
     }
@@ -886,6 +890,7 @@ int gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char l
     int n = 0;
     int k = 0;
     int r = 0;  // Contador do vetor resultado
+    int saidaGerada = 0;
     int encontrouTerminal = 0;
 
     for(i=0; i<MaxTerminais; i++)   // Percorre resultado para inicializá-lo
@@ -893,7 +898,7 @@ int gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char l
         resultado[i] = -1;
     }
 
-    for(n=0; n<MaxN; n++)    // Percorre todos Dn
+    for(n=0; n<MaxN && !saidaGerada; n++)    // Percorre todos Dn
     {
         k=0;
         encontrouTerminal = 0;
@@ -923,7 +928,14 @@ int gera_entrada(struct REGRA regras[MaxRegras], int terminais_entrada[], char l
             }
         }
 
-        if(encontrouTerminal)
+        // Verifica se gerou roteiro aceito
+        for(i=0; i<MaxRegras; i++)    // Percorre Dn
+        {
+            if(Dn[n][i].marcador == Dn[n][i].nTermos && Dn[n][i].ID == idInicial)   // Se encontrou a regra inicial com marcador no fim da regra, para de gerar a palavra
+                saidaGerada = 1;
+        }
+
+        if(encontrouTerminal && !saidaGerada)
         {
             // Escolhe aleatoriamente entre um dos terminais
             resultado[r] = escolha_aleatoria(terminaisDn, resultado);
@@ -953,7 +965,7 @@ int escolha_aleatoria(float terminaisDn[MaxTerminais][2])
     int n = 0;
     int aux = 0;
     int controle = 1;
-    
+
     while(controle)
     {
         n = rand() % MaxTerminais;
@@ -961,7 +973,7 @@ int escolha_aleatoria(float terminaisDn[MaxTerminais][2])
         if(aux/100 <= terminaisDn[n][1])
             controle = 0;
     }
-    
+
     int retorno = terminaisDn[n][0];
     return retorno;
 }
@@ -997,6 +1009,23 @@ int main(int argc, const char * argv[])
     // Loop principal
     while(!exit)
     {
+        if(aleatorio)
+        {
+            Inicial = 0;
+            i = 0;
+            nTerminaisAleatorio = 0;
+            NVariaveis = 0;
+            NTerminais = 0;
+            NRegras = 0;
+            NTerminaisIN = 0;
+
+            // Inicialização
+            inicializa_matrizes(Terminais, Variaveis, Regras, D0, Dn);
+
+            // Leitura do arquivo da gramática
+            le_gramatica(Terminais, Variaveis, &Inicial, Regras);
+        }
+
         // Menu
         while(menu)
         {
@@ -1030,6 +1059,7 @@ int main(int argc, const char * argv[])
             {
                 menu = 0;
                 aleatorio = 1;
+                exit = 1;
             }
             else
             {
@@ -1064,9 +1094,12 @@ int main(int argc, const char * argv[])
         }
 
         // Imprime
-        imprime_regras(Terminais, Variaveis, Regras);
-        imprime_terminais(Terminais);
-        imprime_variaveis(Variaveis, Inicial);
+        if(exit)
+        {
+            imprime_regras(Terminais, Variaveis, Regras);
+            imprime_terminais(Terminais);
+            imprime_variaveis(Variaveis, Inicial);
+        }
 
         if(parser)
         {
