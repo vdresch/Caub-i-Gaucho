@@ -474,7 +474,7 @@ void imprime_regras(char terminais[MaxTerminais][Tamanho], char variaveis[MaxVar
                     int k = 0;
                     if(regras[i].marcador == j)
                     {
-                        printf(" *[");
+                        printf(" *[ ");
                         marcadorColocado = 1;
                     }
                     else
